@@ -5,36 +5,34 @@
  */
 package com.mycompany.babynamecrawler_desktop;
 
-import java.sql.*;
+
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 
 /**
  *
  * @author gldev
  */
 public class BabyNameCrawler {
-       public static void main(String[] args) {
-        String host = "jdbc:derby://localhost:1527/BabyNameRanking";
-        String uName = "test";
-        String uPass = "123456";
-        Statement statement=null;
 
-        try {
-            Connection con = DriverManager.getConnection(host, uName, uPass);
-        statement = con.createStatement();
-        } catch (SQLException ex) {
-            System.out.println(ex.toString());
+    public static void main(String[] args) {
+        String PERSISTENCE_UNIT_NAME = "BabyName";
+        EntityManagerFactory factory =factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 
-        } finally {
-            System.out.println("Veritabanina baglanti basarili");
-            
-        }
+        BabyNameJpaController kontrolcu = new BabyNameJpaController(factory);
+        
+        BabyName name = new BabyName(); // cekilecek isimler jpa ile eslesen bu objede tutulacak
+        BabyNamePK pk = new BabyNamePK();
+        
 
         List<String> liste = new ArrayList<String>();
-        List<Dugum> dugumListesi = new ArrayList<Dugum>();
 
         URL url;
         InputStream is = null;
@@ -64,37 +62,40 @@ public class BabyNameCrawler {
             }
         }
         for (int i = 0; i < 1000; i++) {
-            
-                Dugum gecici = new Dugum(null, null, 0, 0);
-                // kelimeler = liste.get(i).replaceAll("[0-9]", "").split("\\s+");
-                kelimeler = liste.get(i).replaceAll(" ", "").split("\t");
-                
-                gecici.isimErkek = kelimeler[1];
-                gecici.isimKadin = kelimeler[2];
-                dugumListesi.add(gecici);
-            try {    
-                statement.executeUpdate("INSERT INTO BabyName " + "VALUES ("+2002+", '"+kelimeler[1]+"', 'M', "+Integer.parseInt(kelimeler[2])+")");
-                statement.executeUpdate("INSERT INTO BabyName " + "VALUES ("+2002+", '"+kelimeler[1]+"', 'F', "+Integer.parseInt(kelimeler[2])+")");
 
-            } catch (SQLException ex) {
-                System.out.println(ex.toString());
-                break;
-            }finally{
-                sayac+=2;
+            kelimeler = liste.get(i).replaceAll(" ", "").split("\t");
+            
+            pk.setYearr(2002);
+            pk.setName(kelimeler[1]);
+            pk.setGender('M');
+            name.setCount(Integer.parseInt(kelimeler[2]));
+            name.setBabyNamePK(pk);
+            
+            try {
+                kontrolcu.create(name); // erkek ismini ekle
+            } catch (Exception ex) {
+                Logger.getLogger(BabyNameCrawler.class.getName()).log(Level.SEVERE, null, ex);
             }
             
+            
+                     
+            pk.setYearr(2002);
+            pk.setName(kelimeler[3]);
+            pk.setGender('F');
+            name.setCount(Integer.parseInt(kelimeler[4]));
+            name.setBabyNamePK(pk);
+            
+            try {
+                kontrolcu.create(name); // kiz ismini ekle
+            } catch (Exception ex) {
+                Logger.getLogger(BabyNameCrawler.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            sayac += 2;
+            
+
         }
-           System.out.println("Eklenen kayit sayisi = " + sayac);
-        // kelimeler=liste.get(1).split(" ");
-        /*
-        System.out.println(" \n1. erkek= " + dugumListesi.get(0).isimErkek + " \n1. kadim= " + dugumListesi.get(0).isimKadin);
-        System.out.println(" \n2. erkek= " + dugumListesi.get(1).isimErkek + " \n2. kadin= " + dugumListesi.get(1).isimKadin);
-        System.out.println(" \n3. erkek= " + dugumListesi.get(2).isimErkek + " \n3. kadin= " + dugumListesi.get(2).isimKadin);
-        */
-        /*for (int i = 0; i < 100; i++) {
-            if(kelimeler[i]!=null)
-            System.out.println(i+". kelime= "+kelimeler[i]);
-        }
-         */
+        System.out.println("Eklenen kayit sayisi = " + sayac);
+
     }
 }

@@ -6,73 +6,66 @@
 package com.mycompany.babynamecrawler_desktop;
 
 import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author gldev
  */
 @Entity
+@Table(name = "BABYNAME")
+@XmlRootElement
+@NamedQueries({
+    @NamedQuery(name = "BabyName.findAll", query = "SELECT b FROM BabyName b")
+    , @NamedQuery(name = "BabyName.findByYearr", query = "SELECT b FROM BabyName b WHERE b.babyNamePK.yearr = :yearr")
+    , @NamedQuery(name = "BabyName.findByName", query = "SELECT b FROM BabyName b WHERE b.babyNamePK.name = :name")
+    , @NamedQuery(name = "BabyName.findByGender", query = "SELECT b FROM BabyName b WHERE b.babyNamePK.gender = :gender")
+    , @NamedQuery(name = "BabyName.findByCount", query = "SELECT b FROM BabyName b WHERE b.count = :count")})
 public class BabyName implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    
-    /*benim eklediklerim*/
-    private int yearr;
-    private String name;
-    private char gender;
-    private int count;
+    @EmbeddedId
+    protected BabyNamePK babyNamePK;
+    @Column(name = "COUNT")
+    private Integer count;
 
-    public void setYearr(int yearr) {
-        this.yearr = yearr;
+    public BabyName() {
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public BabyName(BabyNamePK babyNamePK) {
+        this.babyNamePK = babyNamePK;
     }
 
-    public void setGender(char gender) {
-        this.gender = gender;
+    public BabyName(int yearr, String name, Character gender) {
+        this.babyNamePK = new BabyNamePK(yearr, name, gender);
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    public BabyNamePK getBabyNamePK() {
+        return babyNamePK;
     }
 
-    public int getYearr() {
-        return yearr;
+    public void setBabyNamePK(BabyNamePK babyNamePK) {
+        this.babyNamePK = babyNamePK;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public char getGender() {
-        return gender;
-    }
-
-    public int getCount() {
+    public Integer getCount() {
         return count;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    public void setCount(Integer count) {
+        this.count = count;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
+        hash += (babyNamePK != null ? babyNamePK.hashCode() : 0);
         return hash;
     }
 
@@ -83,7 +76,7 @@ public class BabyName implements Serializable {
             return false;
         }
         BabyName other = (BabyName) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+        if ((this.babyNamePK == null && other.babyNamePK != null) || (this.babyNamePK != null && !this.babyNamePK.equals(other.babyNamePK))) {
             return false;
         }
         return true;
@@ -91,7 +84,7 @@ public class BabyName implements Serializable {
 
     @Override
     public String toString() {
-        return "com.mycompany.babynamecrawler_desktop.BabyName[ id=" + id + " ]";
+        return "com.mycompany.babynamecrawler_desktop.BabyName[ babyNamePK=" + babyNamePK + " ]";
     }
     
 }

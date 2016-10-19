@@ -6,6 +6,7 @@
 package com.mycompany.babynamecrawler_desktop;
 
 import com.mycompany.babynamecrawler_desktop.exceptions.NonexistentEntityException;
+import com.mycompany.babynamecrawler_desktop.exceptions.PreexistingEntityException;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -30,13 +31,21 @@ public class BabyNameJpaController implements Serializable {
         return emf.createEntityManager();
     }
 
-    public void create(BabyName babyName) {
+    public void create(BabyName babyName) throws PreexistingEntityException, Exception {
+        if (babyName.getBabyNamePK() == null) {
+            babyName.setBabyNamePK(new BabyNamePK());
+        }
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
             em.persist(babyName);
             em.getTransaction().commit();
+        } catch (Exception ex) {
+            if (findBabyName(babyName.getBabyNamePK()) != null) {
+                throw new PreexistingEntityException("BabyName " + babyName + " already exists.", ex);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -54,7 +63,7 @@ public class BabyNameJpaController implements Serializable {
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
-                Long id = babyName.getId();
+                BabyNamePK id = babyName.getBabyNamePK();
                 if (findBabyName(id) == null) {
                     throw new NonexistentEntityException("The babyName with id " + id + " no longer exists.");
                 }
@@ -67,7 +76,7 @@ public class BabyNameJpaController implements Serializable {
         }
     }
 
-    public void destroy(Long id) throws NonexistentEntityException {
+    public void destroy(BabyNamePK id) throws NonexistentEntityException {
         EntityManager em = null;
         try {
             em = getEntityManager();
@@ -75,7 +84,7 @@ public class BabyNameJpaController implements Serializable {
             BabyName babyName;
             try {
                 babyName = em.getReference(BabyName.class, id);
-                babyName.getId();
+                babyName.getBabyNamePK();
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The babyName with id " + id + " no longer exists.", enfe);
             }
@@ -112,7 +121,7 @@ public class BabyNameJpaController implements Serializable {
         }
     }
 
-    public BabyName findBabyName(Long id) {
+    public BabyName findBabyName(BabyNamePK id) {
         EntityManager em = getEntityManager();
         try {
             return em.find(BabyName.class, id);
