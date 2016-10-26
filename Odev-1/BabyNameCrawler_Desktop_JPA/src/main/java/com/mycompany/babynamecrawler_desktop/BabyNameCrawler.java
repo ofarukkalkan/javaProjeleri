@@ -22,6 +22,7 @@ import javax.persistence.Persistence;
  */
 public class BabyNameCrawler {
 
+
     public static void main(String[] args) {
         String PERSISTENCE_UNIT_NAME = "BabyName";
         EntityManagerFactory factory =factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
@@ -30,7 +31,7 @@ public class BabyNameCrawler {
         
         BabyName name = new BabyName(); // cekilecek isimler jpa ile eslesen bu objede tutulacak
         BabyNamePK pk = new BabyNamePK();
-        
+  
 
         List<String> liste = new ArrayList<String>();
 

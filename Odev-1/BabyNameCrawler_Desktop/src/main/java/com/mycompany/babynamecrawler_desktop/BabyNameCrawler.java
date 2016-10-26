@@ -1,100 +1,109 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.mycompany.babynamecrawler_desktop;
 
-import java.sql.*;
-import java.net.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author gldev
  */
 public class BabyNameCrawler {
-       public static void main(String[] args) {
+
+    public static void main(String[] args) {
+        // baglanti icin gerekli giris bilgileri
         String host = "jdbc:derby://localhost:1527/BabyNameRanking";
         String uName = "test";
         String uPass = "123456";
-        Statement statement=null;
+        // veritabanina gonderilecek sorguyu tutacak nesne
+        Statement statement = null;
 
         try {
+            // veritabanina baglantinin kurulmasi
             Connection con = DriverManager.getConnection(host, uName, uPass);
-        statement = con.createStatement();
-        } catch (SQLException ex) {
+            // baglanti kurulan veritabanindan sorgu sablonunun alinmasi
+            statement = con.createStatement();
+        } catch (Exception ex) {
             System.out.println(ex.toString());
-
         } finally {
             System.out.println("Veritabanina baglanti basarili");
-            
         }
 
-        List<String> liste = new ArrayList<String>();
-        List<Dugum> dugumListesi = new ArrayList<Dugum>();
+        ArrayList<URL> urls = new ArrayList<>(10);
 
-        URL url;
+        // url den veri getirmek icin gerekli nesneler
         InputStream is = null;
         BufferedReader br;
+        // her bir satirin kopyalanacagi string
         String line;
-        String[] kelimeler = new String[1001];
+        // her bir satirdan elde edilen kelime parcaciklarinin tutulmasi icin dizi
+        String[] kelimeler = new String[5];
+        // eklenen kayit icin sayac
         int sayac = 0;
+
         try {
-            url = new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2002.txt");
-            is = url.openStream();  // throws an IOException
-            br = new BufferedReader(new InputStreamReader(is));
 
-            for (line = br.readLine(); line != null; line = br.readLine()) {
+            // 2001 den 2010 a kadar olan linklerin eklenmesi
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2001.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2002.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2003.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2004.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2005.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2006.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2007.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2008.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2009.txt"));
+            urls.add(new URL("http://www.cs.armstrong.edu/liang/data/babynamesranking2010.txt"));
 
-                liste.add(line);
+            // dis dongu her bir yil icin calisir
+            for (int i = 0; i < urls.size(); i++) {
+                // satir parcalama isinde kullanilacak dinamik dizi icin
+                // liste her bir yili eklemeden once sifirlanir.
+                ArrayList<String> liste = new ArrayList<String>();
+
+                is = urls.get(i).openStream();  // throws an IOException
+                br = new BufferedReader(new InputStreamReader(is));
+                // url den okunan her satirin listeye eklenmesi
+                for (line = br.readLine(); line != null; line = br.readLine()) {
+                    liste.add(line);
+                }
+
+                // bir yilda yer alan isimler icin calisir
+                for (int j = 0; j < liste.size(); j++) {
+                    // elde edilen satirdan kelime parcalarinin ayirt edilme islemi
+                    kelimeler = liste.get(j).replaceAll(" ", "").split("\t");
+
+                    try {
+                        // kayitlarin veritabanina insert edilme islemi
+                        statement.executeUpdate("INSERT INTO BabyName " + "VALUES (" + (int)(2001 + i) + ", '" + kelimeler[1] + "', 'M', " + Integer.parseInt(kelimeler[2]) + ")");
+                        statement.executeUpdate("INSERT INTO BabyName " + "VALUES (" + (int)(2001 + i) + ", '" + kelimeler[3] + "', 'F', " + Integer.parseInt(kelimeler[4]) + ")");
+                        sayac += 2;
+                    } catch (Exception ex) {
+                        System.out.println(ex.toString());
+                        break;
+                    }
+
+                }
             }
-        } catch (MalformedURLException mue) {
-            System.out.println(mue.toString());
-        } catch (IOException ioe) {
-            System.out.println(ioe.toString());
+
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
         } finally {
+
             try {
                 if (is != null) {
                     is.close();
                 }
-            } catch (IOException ioe) {
-            }
-        }
-        for (int i = 0; i < 1000; i++) {
-            
-                Dugum gecici = new Dugum(null, null, 0, 0);
-                // kelimeler = liste.get(i).replaceAll("[0-9]", "").split("\\s+");
-                kelimeler = liste.get(i).replaceAll(" ", "").split("\t");
-                
-                gecici.isimErkek = kelimeler[1];
-                gecici.isimKadin = kelimeler[2];
-                dugumListesi.add(gecici);
-            try {    
-                statement.executeUpdate("INSERT INTO BabyName " + "VALUES ("+2002+", '"+kelimeler[1]+"', 'M', "+Integer.parseInt(kelimeler[2])+")");
-                statement.executeUpdate("INSERT INTO BabyName " + "VALUES ("+2002+", '"+kelimeler[1]+"', 'F', "+Integer.parseInt(kelimeler[2])+")");
-
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 System.out.println(ex.toString());
-                break;
-            }finally{
-                sayac+=2;
             }
-            
         }
-           System.out.println("Eklenen kayit sayisi = " + sayac);
-        // kelimeler=liste.get(1).split(" ");
-        /*
-        System.out.println(" \n1. erkek= " + dugumListesi.get(0).isimErkek + " \n1. kadim= " + dugumListesi.get(0).isimKadin);
-        System.out.println(" \n2. erkek= " + dugumListesi.get(1).isimErkek + " \n2. kadin= " + dugumListesi.get(1).isimKadin);
-        System.out.println(" \n3. erkek= " + dugumListesi.get(2).isimErkek + " \n3. kadin= " + dugumListesi.get(2).isimKadin);
-        */
-        /*for (int i = 0; i < 100; i++) {
-            if(kelimeler[i]!=null)
-            System.out.println(i+". kelime= "+kelimeler[i]);
-        }
-         */
+
+        System.out.println("Eklenen kayit sayisi = " + sayac);
     }
 }
