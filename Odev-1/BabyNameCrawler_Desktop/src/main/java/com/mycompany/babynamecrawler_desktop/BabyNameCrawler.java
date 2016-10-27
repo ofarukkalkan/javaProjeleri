@@ -65,7 +65,7 @@ public class BabyNameCrawler {
                 // satir parcalama isinde kullanilacak dinamik dizi icin
                 // liste her bir yili eklemeden once sifirlanir.
                 ArrayList<String> liste = new ArrayList<String>();
-
+                System.out.println(urls.get(i)+" => okunuyor");
                 is = urls.get(i).openStream();  // throws an IOException
                 br = new BufferedReader(new InputStreamReader(is));
                 // url den okunan her satirin listeye eklenmesi
@@ -97,7 +97,7 @@ public class BabyNameCrawler {
 
             try {
                 if (is != null) {
-                    is.close();
+                    is.close(); //inputStream Kapatma
                 }
             } catch (Exception ex) {
                 System.out.println(ex.toString());
