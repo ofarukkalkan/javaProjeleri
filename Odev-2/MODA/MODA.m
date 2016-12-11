@@ -85,11 +85,12 @@ for iter=1:max_iter
     
     [Archive_X, Archive_F, Archive_member_no]=UpdateArchive(Archive_X, Archive_F, X, Particles_F, Archive_member_no);
     
-    if Archive_member_no>ArchiveMaxSize
+    if Archive_member_no>ArchiveMaxSize  
         Archive_mem_ranks=RankingProcess(Archive_F, ArchiveMaxSize, obj_no);
         [Archive_X, Archive_F, Archive_mem_ranks, Archive_member_no]=HandleFullArchive(Archive_X, Archive_F, Archive_member_no, Archive_mem_ranks, ArchiveMaxSize);
     else
         Archive_mem_ranks=RankingProcess(Archive_F, ArchiveMaxSize, obj_no);
+        
     end
     
     Archive_mem_ranks=RankingProcess(Archive_F, ArchiveMaxSize, obj_no);
