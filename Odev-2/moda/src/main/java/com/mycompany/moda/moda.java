@@ -143,7 +143,7 @@ public class moda {
             // Archive_mem_ranks
             Archive_mem_ranks = RankingProcess(Archive_F, ArchiveMaxSize, obj_no);
             // index=RouletteWheelSelection(1./Archive_mem_ranks);
-            int index = RouletteWheelSelection(elementWiseDivision(onesRowVector(getSizeOfDim(Archive_mem_ranks, 2)), Archive_mem_ranks));
+            int index = RouletteWheelSelection(elementWiseDivision(onesRowVector(getSizeOfDim(Archive_mem_ranks, 1)), Archive_mem_ranks));
             // if index==-1
             if (index == -1) {
                 // index=1;
@@ -190,9 +190,9 @@ public class moda {
                         // neighbours_no=neighbours_no+1;
                         neighbours_no++;
                         // Neighbours_V(:,index)=DeltaX(:,j);
-                        setColumn(Neighbours_V, index, getJthColumn(DeltaX, j));
+                        Neighbours_V = mergeColumns(Neighbours_V, getJthColumn(DeltaX, j));
                         // Neighbours_X(:,index)=X(:,j);
-                        setColumn(Neighbours_X, index, getJthColumn(X, j));
+                        Neighbours_X = mergeColumns(Neighbours_X, getJthColumn(X, j));
                     }
                 }
                 // S=zeros(dim,1);
@@ -236,25 +236,24 @@ public class moda {
                 // C=C_temp-X(:,i);
                 double C[][] = elementWiseSubstraction(C_temp, getJthColumn(X, i));
                 // Dist2Attraction=distance(X(:,i),Food_pos(:,1));
-                double Dist2Attraction[] = distance(getJthColumn(X, i), getJthColumn(Food_pos, 1));
+                double Dist2Attraction[] = distance(getJthColumn(X, i), getJthColumn(Food_pos, 0));
                 double F[][] = null;
                 // if all(Dist2Attraction<=r)
                 if (isAllNonZero(isLessThenAndEqual(Dist2Attraction, r[0]))) {
                     // F=Food_pos-X(:,i);
-                    F = elementWiseSubstraction(Food_pos, getJthColumn(X, i));
+                    F = elementWiseSubstraction(getJthColumn(Food_pos, 0), getJthColumn(X, i));
                     // iter;
-                    System.out.print(iter);
                 } else {
                     // F=0;
                     F = zerosColumnVector(dim);
                 }
                 double E[][] = null;
                 // Dist=distance(X(:,i),Enemy_pos(:,1));
-                Dist = distance(getJthColumn(X, i), getJthColumn(Enemy_pos, 1));
+                Dist = distance(getJthColumn(X, i), getJthColumn(Enemy_pos, 0));
                 // if all(Dist<=r)
                 if (isAllNonZero(isLessThenAndEqual(Dist, r[0]))) {
                     // E=Enemy_pos+X(:,i);
-                    E = getJthColumn(Enemy_pos, i);
+                    E = elementWiseAddition(getJthColumn(Enemy_pos, 0), getJthColumn(X, i));
                 } else {
                     // E=zeros(dim,1);
                     E = zerosMatrix(dim, 1);
@@ -262,16 +261,16 @@ public class moda {
                 // for tt=1:dim
                 for (int tt = 0; tt < dim; tt++) {
                     // if X(tt,i)>ub(tt)
-                    if (X[tt][i] > ub[tt][0]) {
+                    if (X[tt][i] > ub[0][tt]) {
                         // X(tt,i)=lb(tt);
-                        X[tt][i] = lb[tt][0];
+                        X[tt][i] = lb[0][tt];
                         // DeltaX(tt,i)=rand;
                         DeltaX[tt][i] = Math.random();
                     }
                     // if X(tt,i)<lb(tt)
-                    if (X[tt][i] < lb[tt][0]) {
+                    if (X[tt][i] < lb[0][tt]) {
                         // X(tt,i)=ub(tt);
-                        X[tt][i] = ub[tt][0];
+                        X[tt][i] = ub[0][tt];
                         // DeltaX(tt,i)=rand;
                         DeltaX[tt][i] = Math.random();
                     }
@@ -280,9 +279,9 @@ public class moda {
                     if (neighbours_no > 1) {
                         for (int j = 0; j < dim; j++) {
                             DeltaX[j][i] = w * DeltaX[j][i]
-                                    + Math.random() * A[j][1]
-                                    + Math.random() * C[j][1]
-                                    + Math.random() * S[j][1];
+                                    + Math.random() * A[j][0]
+                                    + Math.random() * C[j][0]
+                                    + Math.random() * S[j][0];
                             if (DeltaX[j][i] > V_max) {
                                 DeltaX[j][i] = V_max;
                             }
@@ -300,11 +299,11 @@ public class moda {
                     }
                 } else {
                     for (int j = 0; j < dim; j++) {
-                        DeltaX[j][i] = s * S[j][1]
-                                + a * A[j][1]
-                                + c * C[j][1]
-                                + f * F[j][1]
-                                + e * E[j][1]
+                        DeltaX[j][i] = s * S[j][0]
+                                + a * A[j][0]
+                                + c * C[j][0]
+                                + f * F[j][0]
+                                + e * E[j][0]
                                 + w * DeltaX[j][i];
                         if (DeltaX[j][i] > V_max) {
                             DeltaX[j][i] = V_max;
@@ -312,7 +311,7 @@ public class moda {
                         if (DeltaX[j][i] < -V_max) {
                             DeltaX[j][i] = -V_max;
                         }
-                        X[j][1] = X[j][i] + DeltaX[j][i];
+                        X[j][i] = X[j][i] + DeltaX[j][i];
                     }
                 }
                 double Flag4ub[][] = isGreaterThen(getJthColumn(X, i), transposeMatrix(ub));
@@ -322,11 +321,10 @@ public class moda {
                                 elementWiseProduct(getJthColumn(X, i), logicNOT(logicOR(Flag4ub, Flag4lb))),
                                 elementWiseProduct(transposeMatrix(ub), Flag4ub)),
                                 elementWiseProduct(transposeMatrix(lb), Flag4lb)));
-                
 
             }
+            System.out.println("At the iteration " + iter + " there are " + Archive_member_no + "  non-dominated solutions in the archive");
         }
-        System.out.println("At the iteration " + iter + " there are " + Archive_member_no + "  non-dominated solutions in the archive" );
     }
 
     public static double[][] logicNOT(double m1[][]) {
@@ -354,7 +352,7 @@ public class moda {
         for (int i = 0; i < m1.length; i++) {
             // o(1,i)=sqrt((a(i)-b(i))^2);
             if (getSizeOfDim(m1, 2) == 1) {
-                res[i] = m1[i][0] - m2[i][0];
+                res[i] = Math.sqrt(Math.pow(m1[i][0] - m2[i][0], 2));
             } else if (getSizeOfDim(m1, 2) != 1) {
                 /* burasi dolacak */
             }
@@ -365,16 +363,40 @@ public class moda {
 
     public static Object[] HandleFullArchive(double Archive_X[][], double Archive_F[][], int Archive_member_no, double Archive_mem_ranks[], int ArchiveMaxSize) {
         Object results[] = new Object[4];
-        double Archive_X_Chopped[][] = Archive_X;
-        double Archive_F_Chopped[][] = Archive_F;
-        double Archive_mem_ranks_updated[] = Archive_mem_ranks;
+        double Archive_X_Chopped[][] = new double[Archive_X.length][Archive_X[0].length];
+        double Archive_F_Chopped[][] = new double[Archive_F.length][Archive_F[0].length];
+        double Archive_mem_ranks_updated[] = new double[Archive_mem_ranks.length];
 
-        for (int i = 0; i < getSizeOfDim(Archive_F, 1) - ArchiveMaxSize; i++) {
-            int index = RouletteWheelSelection(Archive_mem_ranks);
+        for (int i = 0; i < Archive_X.length; i++) {
+            for (int j = 0; j < Archive_X[0].length; j++) {
+                Archive_X_Chopped[i][j] = Archive_X[i][j];
+            }
+        }
+        for (int i = 0; i < Archive_F.length; i++) {
+            for (int j = 0; j < Archive_F[0].length; j++) {
+                Archive_F_Chopped[i][j] = Archive_F[i][j];
+            }
+        }
+        for (int i = 0; i < Archive_mem_ranks.length; i++) {
+            Archive_mem_ranks_updated[i] = Archive_mem_ranks[i];
+        }
 
-            Archive_X_Chopped = mergeRows(getRows(Archive_X_Chopped, 0, index - 1), getRows(Archive_X_Chopped, index + 1, Archive_member_no));
-            Archive_F_Chopped = mergeRows(getRows(Archive_F_Chopped, 0, index - 1), getRows(Archive_F_Chopped, index + 1, Archive_member_no));
-            Archive_mem_ranks_updated = mergeColumns(getSubRow(Archive_mem_ranks, 0, index - 1), getSubRow(Archive_mem_ranks, index + 1, Archive_member_no));
+        for (int i = 0; i < getSizeOfDim(Archive_X, 1) - ArchiveMaxSize; i++) {
+            int index = RouletteWheelSelection(Archive_mem_ranks_updated);
+
+            if (index == Archive_member_no - 1) {
+                Archive_X_Chopped = getRows(Archive_X_Chopped, 0, Archive_member_no - 2);
+                Archive_F_Chopped = getRows(Archive_F_Chopped, 0, Archive_member_no - 2);
+                Archive_mem_ranks_updated = getSubRow(Archive_mem_ranks_updated, 0, Archive_member_no - 2);
+            } else if (index == 0) {
+                Archive_X_Chopped = getRows(Archive_X_Chopped, 1, Archive_member_no - 1);
+                Archive_F_Chopped = getRows(Archive_F_Chopped, 1, Archive_member_no - 1);
+                Archive_mem_ranks_updated = getSubRow(Archive_mem_ranks_updated, 1, Archive_member_no - 1);
+            } else {
+                Archive_X_Chopped = mergeRows(getRows(Archive_X_Chopped, 0, index - 1), getRows(Archive_X_Chopped, index + 1, Archive_member_no - 1));
+                Archive_F_Chopped = mergeRows(getRows(Archive_F_Chopped, 0, index - 1), getRows(Archive_F_Chopped, index + 1, Archive_member_no - 1));
+                Archive_mem_ranks_updated = mergeColumns(getSubRow(Archive_mem_ranks_updated, 0, index - 1), getSubRow(Archive_mem_ranks_updated, index + 1, Archive_member_no - 1));
+            }
             Archive_member_no--;
         }
         results[0] = Archive_X_Chopped;
@@ -385,6 +407,7 @@ public class moda {
         return results;
     }
 
+    // dogrulandi
     public static double[] RankingProcess(double Archive_F[][], int ArchiveMaxSize, int obj_no) {
 
         double my_min[] = null;
@@ -401,7 +424,7 @@ public class moda {
         // for i=1:size(Archive_F,1)
         for (int i = 0; i < ranks.length; i++) {
             // ranks(i)=0;
-            ranks[0] = 0;
+            ranks[i] = 0;
             // for j=1:size(Archive_F,1)
             for (int j = 0; j < ranks.length; j++) {
                 // flag=0;
@@ -424,30 +447,36 @@ public class moda {
         return ranks;
     }
 
+    // dogrulandi
     public static double[] max(double m[][]) {
-        double res[] = new double[2];
-        res = m[0];
-        for (int i = 0; i < m.length; i++) {
-            if (m[i][0] > res[0]) {
-                res[0] = m[i][0];
+        double res[] = new double[m[0].length];
+        for (int i = 0; i < res.length; i++) {
+            res[i] = m[0][i];
+        }
+        for (int j = 0; j < m[0].length; j++) {
+            for (int i = 0; i < m.length; i++) {
+                if (m[i][j] > res[j]) {
+                    res[j] = m[i][j];
+                }
             }
-            if (m[i][1] > res[1]) {
-                res[1] = m[i][1];
-            }
+
         }
         return res;
     }
 
+    // dogrulandi
     public static double[] min(double m[][]) {
-        double res[] = new double[2];
-        res = m[0];
-        for (int i = 0; i < m.length; i++) {
-            if (m[i][0] < res[0]) {
-                res[0] = m[i][0];
+        double res[] = new double[m[0].length];
+        for (int i = 0; i < res.length; i++) {
+            res[i] = m[0][i];
+        }
+        for (int j = 0; j < m[0].length; j++) {
+            for (int i = 0; i < m.length; i++) {
+                if (m[i][j] < res[j]) {
+                    res[j] = m[i][j];
+                }
             }
-            if (m[i][1] < res[1]) {
-                res[1] = m[i][1];
-            }
+
         }
         return res;
     }
@@ -462,7 +491,7 @@ public class moda {
             kumulatifToplam = kumulatifToplam + weights[i];
             accumulation[i] = kumulatifToplam;
         }
-        p = Math.random() * accumulation[accumulation.length];
+        p = Math.random() * accumulation[accumulation.length - 1];
         for (int index = 0; index < accumulation.length; index++) {
             if (accumulation[index] > p) {
                 chosen_index = index;
@@ -610,9 +639,9 @@ public class moda {
     // dogrulandi
     public static double[] sum(double m[][]) {
         double res[] = new double[m[0].length];
-        for (int j = 0; j < m[0].length; j++) {
+        for (int j = 0; j < res.length; j++) {
             for (int i = 0; i < m.length; i++) {
-                res[j] += m[j][i];
+                res[j] += m[i][j];
             }
         }
         return res;
@@ -733,7 +762,7 @@ public class moda {
     public static double[][] getRows(double matrix[][], int rowStart, int rowEnd) {
         double res[][] = new double[rowEnd - rowStart + 1][matrix[0].length];
         for (int i = 0, j = rowStart; i < res.length; i++, j++) {
-            for (int k = 0; k < matrix[0].length; k++) {
+            for (int k = 0; k < res[0].length; k++) {
                 res[i][k] = matrix[j][k];
             }
         }
@@ -749,6 +778,7 @@ public class moda {
         return arr;
     }
 
+    // dogrulandi
     public static double[][] zerosMatrix(int r, int c) {
         double m[][] = new double[r][c];
         return m;
@@ -838,7 +868,11 @@ public class moda {
         double res[][] = null;
         if (m1 == null) {
             res = new double[m2.length][m2[0].length];
-            res = m2;
+            for (int i = 0; i < res.length; i++) {
+                for (int j = 0; j < res[0].length; j++) {
+                    res[i][j] = m2[i][j];
+                }
+            }
             return res;
         } else {
             res = new double[m2.length][m2[0].length + m1[0].length];
@@ -867,10 +901,14 @@ public class moda {
         double m3[][] = new double[rn + 1][cn];
         if (m1 != null) {
             for (int i = 0; i < rn; i++) {
-                m3[i] = m1[i];
+                for (int j = 0; j < cn; j++) {
+                    m3[i][j] = m1[i][j];
+                }
             }
         }
-        m3[rn] = m2;
+        for (int i = 0; i < cn; i++) {
+            m3[rn][i] = m2[i];
+        }
         return m3;
     }
 
