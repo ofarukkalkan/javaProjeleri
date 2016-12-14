@@ -1,5 +1,8 @@
 package com.mycompany.moda;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
 /**
  *
  * @author omerfaruk
@@ -324,6 +327,40 @@ public class moda {
 
             }
             System.out.println("At the iteration " + iter + " there are " + Archive_member_no + "  non-dominated solutions in the archive");
+
+        }        
+        /*
+        if obj_no==2
+            plot(Archive_F(:,1),Archive_F(:,2),'ko','MarkerSize',8,'markerfacecolor','k');
+        else
+            plot3(Archive_F(:,1),Archive_F(:,2),Archive_F(:,3),'ko','MarkerSize',8,'markerfacecolor','k');
+        end
+        */
+        // bu noktalar dosya olarak export edilip cizimleri matlabda yapilmakta
+        if (obj_no == 2) {
+            exportToFile(getJthColumn(Archive_F, 0), "Archive_F_0.txt");
+            exportToFile(getJthColumn(Archive_F, 1), "Archive_F_1.txt");
+        } else {
+            exportToFile(getJthColumn(Archive_F, 0), "Archive_F_0.txt");
+            exportToFile(getJthColumn(Archive_F, 1), "Archive_F_1.txt");
+            exportToFile(getJthColumn(Archive_F, 2), "Archive_F_2.txt");
+        }
+
+    }
+
+    public static void exportToFile(double matrix[][], String file) {
+        try {
+            PrintWriter out = new PrintWriter(file);
+            String data = "";
+            for (int i = 0; i < matrix.length; i++) {
+                for (int j = 0; j < matrix[0].length; j++) {
+                    data = data + matrix[i][j] + "\t";
+                }
+                data = data + "\n";
+            }
+            out.println(data);
+            out.close();
+        } catch (FileNotFoundException e) {
         }
     }
 
